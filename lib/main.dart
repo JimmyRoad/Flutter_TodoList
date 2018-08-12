@@ -1,109 +1,108 @@
+// 导入 MaterialApp 和其他组件，我们可以使用它们来快速创建 Material 应用程序
 import 'package:flutter/material.dart';
 
-void main() => runApp(new MyApp());
+void main() => runApp(new TodoApp());
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class TodoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-      title: 'Flutter Demo',
-      theme: new ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or press Run > Flutter Hot Reload in IntelliJ). Notice that the
-        // counter didn't reset back to zero; the application is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: new MyHomePage(title: 'Flutter Demo Home Page'),
+    return new MaterialApp(title: 'Todo List', home: new TodoList());
+  }
+}
+
+class TodoList extends StatefulWidget {
+  @override
+  createState() => new TodoListState();
+}
+
+class TodoListState extends State<TodoList> {
+  List<String> _todoItems = [];
+
+  // 每按一次 + 按钮，都会调用这个方法
+  void _addTodoItem(String task) {
+    // 仅在用户实际输入内容时添加任务
+    if (task.length > 0) {
+      setState(() => _todoItems.add(task));
+    }
+  }
+
+  // 与 _addTodoItem 非常类似，它会修改待办事项的字符串数组，
+// 并通过使用 setState 通知应用程序状态已更改
+  void _removeTodoItem(int index) {
+    setState(() => _todoItems.removeAt(index));
+  }
+
+// 显示警告对话框，询问用户任务是否已完成
+  void _promptRemoveTodoItem(int index) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return new AlertDialog(
+              title: new Text('Mark "${_todoItems[index]}" as done?'),
+              actions: <Widget>[
+                new FlatButton(
+                    child: new Text('CANCEL'),
+                    onPressed: () => Navigator.of(context).pop()),
+                new FlatButton(
+                    child: new Text('MARK AS DONE'),
+                    onPressed: () {
+                      _removeTodoItem(index);
+                      Navigator.of(context).pop();
+                    })
+              ]);
+        });
+  }
+
+  // 构建一个待办事项
+  Widget _buildTodoItem(String todoText, int index) {
+    return new ListTile(
+        title: new Text(todoText), onTap: () => _promptRemoveTodoItem(index));
+  }
+
+  // 构建整个待办事项列表
+  Widget _buildTodoList() {
+    return new ListView.builder(
+      itemBuilder: (context, index) {
+        // itemBuilder 将被自动调用，因为列表需要多次填充其可用空间
+        // 而这很可能超过我们拥有的待办事项数量。
+        // 所以，我们需要检查索引是否正确。
+        if (index < _todoItems.length) {
+          return _buildTodoItem(_todoItems[index], index);
+        }
+      },
     );
   }
-}
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => new _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  void _pushAddTodoScreen() {
+    // 将此页面推入任务栈
+    Navigator.of(context).push(
+        // MaterialPageRoute 会自动为屏幕条目设置动画
+        // 并添加后退按钮以关闭它
+        new MaterialPageRoute(builder: (context) {
+      return new Scaffold(
+          appBar: new AppBar(title: new Text('Add a new task')),
+          body: new TextField(
+            autofocus: true,
+            onSubmitted: (val) {
+              _addTodoItem(val);
+              Navigator.pop(context); // Close the add todo screen
+            },
+            decoration: new InputDecoration(
+                hintText: 'Enter something to do...',
+                contentPadding: const EdgeInsets.all(16.0)),
+          ));
+    }));
   }
 
-  @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return new Scaffold(
-      appBar: new AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: new Text(widget.title),
-      ),
-      body: new Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: new Column(
-          // Column is also layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug paint" (press "p" in the console where you ran
-          // "flutter run", or select "Toggle Debug Paint" from the Flutter tool
-          // window in IntelliJ) to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            new Text(
-              'You have pushed the button this many times:',
-            ),
-            new Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
-      ),
+      appBar: new AppBar(title: new Text('Todo List')),
+      body: _buildTodoList(),
       floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+          onPressed: _pushAddTodoScreen,
+          // pressing this button now opens the new screen
+          tooltip: 'Add task',
+          child: new Icon(Icons.add)),
     );
   }
 }
